@@ -14,6 +14,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import org.osmdroid.api.IMapController;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.CustomZoomButtonsController;
+import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.CopyrightOverlay;
+
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
@@ -33,6 +40,9 @@ public class MainActivity extends AppCompatActivity {
   TextView debugText;
   NfcAdapter nfcAdapter;
 
+  private MapView mapView;
+
+
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -43,17 +53,39 @@ public class MainActivity extends AppCompatActivity {
 
     debugText = findViewById(R.id.debugTextView);
 
-    debugText.setText("asdf");
-
     nfcAdapter = NfcAdapter.getDefaultAdapter(ctx);
 
     Intent startntent =  getIntent();
 
+    // Intent that launched activity is from discovering a NFC tag.
     if (startntent.getAction().equals(ACTION_NDEF_DISCOVERED)) {
 
       Tag tag = startntent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
       new NdefReaderTask().execute(tag);
     }
+
+    mapView = findViewById(R.id.map);
+    CopyrightOverlay copyrightOverlay = new CopyrightOverlay(ctx);
+    mapView.getOverlays().add(copyrightOverlay);
+
+    mapView.setTileSource(TileSourceFactory.OpenTopo);
+
+    mapView.setTilesScaledToDpi(true);
+    mapView.setClickable(true);
+
+    //enable pinch to zoom
+    mapView.setMultiTouchControls(true);
+
+    final IMapController mapController = mapView.getController();
+
+    // remove big + and - buttons at the bottom of the map
+    final CustomZoomButtonsController zoomController = mapView.getZoomController();
+    zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER);
+
+    // Setting starting position and zoom level. Use center of homezone for now
+    GeoPoint startPoint = new GeoPoint(50.0035,8.2743);
+    mapController.setZoom(11.8);
+    mapController.setCenter(startPoint);
 
 
 
