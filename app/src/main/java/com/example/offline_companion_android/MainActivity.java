@@ -14,15 +14,24 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.CopyrightOverlay;
+import org.osmdroid.views.overlay.ItemizedIconOverlay;
+import org.osmdroid.views.overlay.ItemizedOverlay;
+import org.osmdroid.views.overlay.ItemizedOverlayWithFocus;
+import org.osmdroid.views.overlay.OverlayItem;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED;
 
@@ -36,12 +45,20 @@ public class MainActivity extends AppCompatActivity {
 
   public static final String TAG = "mainActivity";
 
-  Context ctx;
-  TextView debugText;
-  NfcAdapter nfcAdapter;
+  private Context ctx;
+  private TextView debugText;
+  private NfcAdapter nfcAdapter;
 
   private MapView mapView;
 
+  private JSONObject nfcData;
+  private JSONArray testCameras;
+
+  private ItemizedOverlay<OverlayItem> cameraOverlay;
+  private ItemizedOverlay<OverlayItem> deviceLocationOverlay;
+
+  // private List<OverlayItem> cameraItemsToDisplay = new ArrayList<>();
+  // private List<OverlayItem> locationItemsToDisplay = new ArrayList<>();
 
 
   @Override
@@ -50,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     setContentView(R.layout.activity_main);
 
     ctx = this;
+
 
     debugText = findViewById(R.id.debugTextView);
 
@@ -87,6 +105,19 @@ public class MainActivity extends AppCompatActivity {
     mapController.setZoom(11.8);
     mapController.setCenter(startPoint);
 
+    try {
+
+      testCameras = new JSONArray("[{\"id\":1475,\"location\":{\"lat\":49.9958,\"lon\":8.28196}},{\"id\":2298,\"location\":{\"lat\":49.99557,\"lon\":8.28153}}]\n");
+
+      populateMapFromNfc(new JSONObject("{\"battery\":109,\"time\":\"2020-11-21 15:29:8\",\"location\":{\"lat\":49.99592,\"lon\":8.28185,\"alt\":123890,\"SIV\":4,\"time\":\"2020-11-21 15:29:9\"},\"contacts\":[{\"id\":1475,\"distance\":74.867378234863281},{\"id\":2298,\"distance\":99.140815734863281}]}\n"));
+
+
+
+
+    } catch (JSONException jsonException) {
+
+      Log.i(TAG, jsonException.toString());
+    }
 
 
   }
@@ -156,11 +187,99 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPostExecute(String result) {
       if (result != null) {
-        debugText.setText("Read content: " + result);
+        debugText.setText(result);
+        try {
+          nfcData = new JSONObject(result);
+          debugText.setText(result);
+
+
+
+        } catch (JSONException jsonException) {
+          Log.i(TAG, jsonException.toString());
+          debugText.setText("EROOR CONVERTING TO JSON");
+        }
       }
     }
   }
 
 
+
+  void populateMapFromNfc(JSONObject nfcJSON) {
+
+    ArrayList<OverlayItem> cameraItems = new ArrayList<OverlayItem>();
+
+    ArrayList<OverlayItem> deviceLocationItems = new ArrayList<OverlayItem>();
+
+    try {
+
+      JSONArray contacts = (JSONArray) nfcJSON.get("contacts");
+
+      for (int i = 0; i < contacts.length(); i++) {
+
+        // fill camera itemOverlay here
+
+        JSONObject contact = contacts.getJSONObject(i);
+
+        long contactId = contact.getLong("id");
+
+        // match id from nfc with data from local db
+
+        for (int j = 0; j < testCameras.length(); j++) {
+          JSONObject camera = (JSONObject) testCameras.get(j);
+          JSONObject cameraLocation = (JSONObject) camera.getJSONObject("location");
+
+          if (contactId == camera.getLong("id") ) {
+
+            cameraItems.add(
+                    new OverlayItem(
+                            contact.getString("id"),
+                            "surveillance camera",
+                            "You were in range of this camera on XX:XX XX.XX.XXXX",
+                            new GeoPoint(cameraLocation.getDouble("lat"),
+                                    cameraLocation.getDouble("lon"))
+                    )
+            );
+
+
+          }
+        }
+
+      }
+
+      JSONObject deviceLocation = nfcJSON.getJSONObject("location");
+
+      deviceLocationItems.add(
+              new OverlayItem(
+                      "your location at time of contact",
+                      "",
+                      "Accuracy (SIV): " + deviceLocation.getString("SIV"),
+                      new GeoPoint(deviceLocation.getDouble("lat"), deviceLocation.getDouble("lon"))
+              )
+      );
+
+
+
+    } catch (JSONException jsonException) {
+
+      Log.i(TAG, jsonException.toString());
+
+    }
+
+    cameraOverlay = new ItemizedIconOverlay<>(cameraItems, null, ctx);
+
+    deviceLocationOverlay = new ItemizedIconOverlay<>(deviceLocationItems, null, ctx);
+
+    mapView.getOverlays().remove(cameraOverlay);
+    mapView.getOverlays().remove(deviceLocationOverlay);
+
+    mapView.getOverlays().add(cameraOverlay);
+    mapView.getOverlays().add(deviceLocationOverlay);
+
+    mapView.invalidate();
+
+
+
+
+  }
 
 }
