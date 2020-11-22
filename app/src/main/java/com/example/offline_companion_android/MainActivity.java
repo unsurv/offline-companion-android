@@ -20,6 +20,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
+import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.CustomZoomButtonsController;
@@ -88,7 +89,8 @@ public class MainActivity extends AppCompatActivity {
     CopyrightOverlay copyrightOverlay = new CopyrightOverlay(ctx);
     mapView.getOverlays().add(copyrightOverlay);
 
-    mapView.setTileSource(TileSourceFactory.OpenTopo);
+    Configuration.getInstance().setUserAgentValue("github-unsurv-oflline-companion");
+    mapView.setTileSource(TileSourceFactory.MAPNIK);
 
     mapView.setTilesScaledToDpi(true);
     mapView.setClickable(true);
