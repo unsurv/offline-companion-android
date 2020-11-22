@@ -1,9 +1,11 @@
 package com.example.offline_companion_android;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
@@ -264,10 +266,12 @@ public class MainActivity extends AppCompatActivity {
       Log.i(TAG, jsonException.toString());
 
     }
+    Drawable cameraMarkerIcon = ContextCompat.getDrawable(ctx, R.drawable.simple_marker_5dpi);
+    Drawable deviceLocationMarker = ContextCompat.getDrawable(ctx, R.drawable.simple_green_5dpi);
 
-    cameraOverlay = new ItemizedIconOverlay<>(cameraItems, null, ctx);
+    cameraOverlay = new ItemizedIconOverlay<>(cameraItems, cameraMarkerIcon, null, ctx);
 
-    deviceLocationOverlay = new ItemizedIconOverlay<>(deviceLocationItems, null, ctx);
+    deviceLocationOverlay = new ItemizedIconOverlay<>(deviceLocationItems, deviceLocationMarker,  null, ctx);
 
     mapView.getOverlays().remove(cameraOverlay);
     mapView.getOverlays().remove(deviceLocationOverlay);
