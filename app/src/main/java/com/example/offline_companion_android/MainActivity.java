@@ -5,7 +5,9 @@ import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
@@ -32,6 +34,8 @@ import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.ItemizedOverlay;
 import org.osmdroid.views.overlay.ItemizedOverlayWithFocus;
 import org.osmdroid.views.overlay.OverlayItem;
+import org.osmdroid.views.overlay.Polygon;
+import org.osmdroid.views.overlay.Polyline;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -64,6 +68,10 @@ public class MainActivity extends AppCompatActivity {
 
   private SurveillanceCameraRepository cameraRepository;
 
+  private List<SurveillanceCamera> camerasOnMap;
+  private List<Polygon> polygonsOnMap;
+  private List<Polyline> polylinesOnMap;
+
   // private List<OverlayItem> cameraItemsToDisplay = new ArrayList<>();
   // private List<OverlayItem> locationItemsToDisplay = new ArrayList<>();
 
@@ -90,6 +98,8 @@ public class MainActivity extends AppCompatActivity {
       new NdefReaderTask().execute(tag);
     }
 
+    camerasOnMap = new ArrayList<>();
+
     mapView = findViewById(R.id.map);
     CopyrightOverlay copyrightOverlay = new CopyrightOverlay(ctx);
     mapView.getOverlays().add(copyrightOverlay);
@@ -109,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
     final CustomZoomButtonsController zoomController = mapView.getZoomController();
     zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER);
 
-    // Setting starting position and zoom level. Use center of homezone for now
+    // Setting starting position and zoom level.
     GeoPoint startPoint = new GeoPoint(50.0035,8.2743);
     mapController.setZoom(11.8);
     mapController.setCenter(startPoint);
@@ -212,6 +222,8 @@ public class MainActivity extends AppCompatActivity {
 
   void populateMapFromNfc(JSONArray nfcJSON) {
 
+    camerasOnMap.clear();
+
     ArrayList<OverlayItem> cameraItems = new ArrayList<OverlayItem>();
 
     ArrayList<OverlayItem> deviceLocationItems = new ArrayList<OverlayItem>();
@@ -247,6 +259,8 @@ public class MainActivity extends AppCompatActivity {
 
           SurveillanceCamera camera = cameraRepository.findById(contactId);
 
+          camerasOnMap.add(camera);
+
           if (camera != null) {
             cameraItems.add(
                     new OverlayItem(
@@ -278,6 +292,17 @@ public class MainActivity extends AppCompatActivity {
 
     deviceLocationOverlay = new ItemizedIconOverlay<>(deviceLocationItems, deviceLocationMarker,  null, ctx);
 
+    for (SurveillanceCamera cam: camerasOnMap) {
+
+      drawCameraArea(new GeoPoint(cam.getLatitude(), cam.getLongitude()),
+              cam.getDirection(),
+              cam.getHeight(),
+              cam.getAngle(),
+              cam.getCameraType());
+
+    }
+
+
     mapView.getOverlays().remove(deviceLocationOverlay);
     mapView.getOverlays().remove(cameraOverlay);
 
@@ -286,6 +311,134 @@ public class MainActivity extends AppCompatActivity {
 
     mapView.invalidate();
 
+
+  }
+
+  void drawConnectionLines() {
+
+    GeoPoint origin
+
+  }
+
+  void drawCameraArea(GeoPoint currentPos, int direction, int height, int horizontalAngle, int cameraType) {
+
+    Polygon polygon = new Polygon();
+
+    int hotPink = Color.argb(127, 255, 0, 255);
+    polygon.setFillColor(hotPink);
+    polygon.setStrokeColor(hotPink);
+
+
+
+    int baseViewDistance = 15; // in m
+
+    // if height entered by user
+    if (height >= 0) {
+      // TODO use formula from surveillance under surveillance https://sunders.uber.space
+      // add 30% viewdistance per meter of height
+
+      double heightFactor = 1 + (0.3 * height);
+      baseViewDistance *= heightFactor;
+    }
+
+    if (horizontalAngle != -1) {
+      // TODO use formula from surveillance under surveillance https://sunders.uber.space
+
+      // about the same as SurveillanceUnderSurveillance https://sunders.uber.space
+      double angleFactor = Math.pow(25f / horizontalAngle, 2) * 0.4;
+      baseViewDistance *= angleFactor;
+    }
+
+    // remove old drawings
+    mapView.getOverlayManager().remove(polygon);
+
+    List<GeoPoint> geoPoints;
+
+    if (cameraType == StorageUtils.FIXED_CAMERA || cameraType == StorageUtils.PANNING_CAMERA) {
+
+      int viewAngle;
+
+      // calculate geopoints for triangle
+
+      double startLat = currentPos.getLatitude();
+      double startLon = currentPos.getLongitude();
+
+      geoPoints = new ArrayList<>();
+
+
+      if (cameraType == StorageUtils.FIXED_CAMERA) {
+        viewAngle = 60; // fixed camera
+
+        // triangle sides compass direction
+        int direction1 = direction - viewAngle / 2;
+        int direction2 = direction + viewAngle / 2;
+
+        // in meters, simulate a 2d coordinate system, known values are: hyp length, and inside angles
+        double xDiff1 = Math.cos(Math.toRadians(90 - direction1)) * baseViewDistance;
+        double yDiff1 = Math.sin(Math.toRadians(90 - direction1)) * baseViewDistance;
+
+        double xDiff2 = Math.cos(Math.toRadians(90 - direction2)) * baseViewDistance;
+        double yDiff2 = Math.sin(Math.toRadians(90 - direction2)) * baseViewDistance;
+
+
+        Location endpoint1 = LocationUtils.getNewLocation(startLat, startLon, yDiff1, xDiff1);
+        Location endpoint2 = LocationUtils.getNewLocation(startLat, startLon, yDiff2, xDiff2);
+
+
+
+        geoPoints.add(new GeoPoint(startLat, startLon));
+        geoPoints.add(new GeoPoint(endpoint1.getLatitude(), endpoint1.getLongitude()));
+        geoPoints.add(new GeoPoint(endpoint2.getLatitude(), endpoint2.getLongitude()));
+
+
+      } else {
+        viewAngle = 120; // panning camera
+
+        // using two 60 degree cones instead of one 120 cone
+
+        // triangle sides compass direction
+        int direction1 = direction - viewAngle / 2;
+        int direction2 = direction;
+        int direction3 = direction + viewAngle / 2;
+
+
+        // in meters, simulate a 2d coordinate system, known values are: hyp length, and inside angles
+        double xDiff1 = Math.cos(Math.toRadians(90 - direction1)) * baseViewDistance;
+        double yDiff1 = Math.sin(Math.toRadians(90 - direction1)) * baseViewDistance;
+
+        double xDiff2 = Math.cos(Math.toRadians(90 - direction2)) * baseViewDistance;
+        double yDiff2 = Math.sin(Math.toRadians(90 - direction2)) * baseViewDistance;
+
+        double xDiff3 = Math.cos(Math.toRadians(90 - direction3)) * baseViewDistance;
+        double yDiff3 = Math.sin(Math.toRadians(90 - direction3)) * baseViewDistance;
+
+
+        Location endpoint1 = LocationUtils.getNewLocation(startLat, startLon, yDiff1, xDiff1);
+        Location endpoint2 = LocationUtils.getNewLocation(startLat, startLon, yDiff2, xDiff2);
+        Location endpoint3 = LocationUtils.getNewLocation(startLat, startLon, yDiff3, xDiff3);
+
+        geoPoints.add(new GeoPoint(startLat, startLon));
+        geoPoints.add(new GeoPoint(endpoint1.getLatitude(), endpoint1.getLongitude()));
+        geoPoints.add(new GeoPoint(endpoint2.getLatitude(), endpoint2.getLongitude()));
+        geoPoints.add(new GeoPoint(endpoint3.getLatitude(), endpoint3.getLongitude()));
+
+
+      }
+
+
+
+
+
+    } else {
+
+      // circle for dome cameras
+      geoPoints = Polygon.pointsAsCircle(currentPos, height * 7);
+
+    }
+
+    polygon.setPoints(geoPoints);
+    mapView.getOverlayManager().add(polygon);
+    mapView.invalidate();
 
   }
 
