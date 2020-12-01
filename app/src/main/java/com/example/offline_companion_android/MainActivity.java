@@ -77,9 +77,6 @@ public class MainActivity extends AppCompatActivity {
 
     cameraRepository = new SurveillanceCameraRepository(getApplication());
 
-
-    List<SurveillanceCamera> allCameras = cameraRepository.getAllCameras();
-
     debugText = findViewById(R.id.debugTextView);
 
     nfcAdapter = NfcAdapter.getDefaultAdapter(ctx);
@@ -119,10 +116,9 @@ public class MainActivity extends AppCompatActivity {
 
     try {
 
-      testCameras = new JSONArray("[{\"id\":113244567788,\"location\":{\"lat\":49.9958,\"lon\":8.28196}},{\"id\":1132445677223,\"location\":{\"lat\":49.99557,\"lon\":8.28153}}]\n");
+      // testCameras = new JSONArray("[{\"id\":113244567788,\"location\":{\"lat\":49.9958,\"lon\":8.28196}},{\"id\":113244567789,\"location\":{\"lat\":49.99557,\"lon\":8.28153}}]\n");
 
-      populateMapFromNfc(new JSONArray("[{\"loc\":{\"lat\":50.022714,\"lon\":8.2239192,\"SIV\":4,\"t\":\"20:23:40\"},\"ids\":[113244567788]},{\"loc\":{\"lat\":50.022724,\"lon\":8.2239392,\"SIV\":4,\"t\":\"20:23:40\"},\"ids\":[1132445677223]}]"));
-
+      populateMapFromNfc(new JSONArray("[{\"loc\":{\"lat\":49.99631,\"lon\":8.28206,\"SIV\":4,\"t\":\"20:23:40\"},\"ids\":[113244567788]},{\"loc\":{\"lat\":49.99584,\"lon\":8.28214,\"SIV\":4,\"t\":\"20:23:40\"},\"ids\":[113244567789]}]"));
 
     } catch (JSONException jsonException) {
 
@@ -248,32 +244,23 @@ public class MainActivity extends AppCompatActivity {
           long contactId =  (long) ids.get(k);
 
           // match id from nfc with data from local db
-          for (int j = 0; j < testCameras.length(); j++) {
-            JSONObject camera = (JSONObject) testCameras.get(j);
-            JSONObject cameraLocation = (JSONObject) camera.getJSONObject("location");
 
-            if (contactId == camera.getLong("id") ) {
+          SurveillanceCamera camera = cameraRepository.findById(contactId);
 
-              cameraItems.add(
-                      new OverlayItem(
-                              String.valueOf(contactId),
-                              "surveillance camera",
-                              "You were in range of this camera on XX:XX XX.XX.XXXX",
-                              new GeoPoint(cameraLocation.getDouble("lat"),
-                                      cameraLocation.getDouble("lon"))
-                      )
-              );
+          if (camera != null) {
+            cameraItems.add(
+                    new OverlayItem(
+                            String.valueOf(contactId),
+                            "surveillance camera",
+                            "You were in range of this camera on XX:XX XX.XX.XXXX",
+                            new GeoPoint(camera.getLatitude(), camera.getLongitude())
+                    )
+            );
 
-
-            }
           }
+
         }
-
-        
       }
-
-
-
 
 
     } catch (JSONException jsonException) {
@@ -281,6 +268,7 @@ public class MainActivity extends AppCompatActivity {
       Log.i(TAG, jsonException.toString());
 
     }
+
     Drawable cameraMarkerIcon = ContextCompat.getDrawable(ctx, R.drawable.simple_marker_5dpi);
 
     // Drawable deviceLocationMarker = getResources().getDrawable(R.drawable.ic_baseline_location_on_24_green);

@@ -4,7 +4,10 @@ import android.app.Application;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import org.apache.commons.lang3.concurrent.ConcurrentException;
+
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class SurveillanceCameraRepository {
 
@@ -22,8 +25,13 @@ public class SurveillanceCameraRepository {
 
       return new getCamerasInAreaAsync(cameraDao).execute(latMin, latMax, lonMin, lonMax).get();
 
-    } catch (Exception e) {
-      Log.i("findByID Error: " , e.toString());
+    } catch (ExecutionException ee) {
+
+      Log.i("ExecutionException:: " , ee.toString());
+
+    } catch (InterruptedException ie) {
+
+      Log.i("InterruptedException: " , ie.toString());
     }
 
 
@@ -32,30 +40,45 @@ public class SurveillanceCameraRepository {
 
   List<SurveillanceCamera> getAllCameras() {
 
-    try {
+  try {
 
-      return new getAllCamerasAsync(cameraDao).execute().get();
+    return new getAllCamerasAsync(cameraDao).execute().get();
 
-    } catch (Exception e) {
-      Log.i("findByID Error: " , e.toString());
-    }
+  } catch (ExecutionException ee) {
 
+    Log.i("ExecutionException:: " , ee.toString());
+
+  } catch (InterruptedException ie) {
+
+    Log.i("InterruptedException: " , ie.toString());
+  }
     return null;
   }
 
-
-  void insertCameras(SurveillanceCamera camera) {
+  SurveillanceCamera findById(long osmId) {
 
     try {
 
-      new insertListAsync(cameraDao).execute(camera);
+      return new findByIdAsync(cameraDao).execute(osmId).get();
 
 
-    } catch (Exception e) {
-      Log.i("findByID Error: " , e.toString());
+    } catch (ExecutionException ee) {
+
+      Log.i("ExecutionException:: " , ee.toString());
+
+    } catch (InterruptedException ie) {
+
+      Log.i("InterruptedException: " , ie.toString());
     }
 
+    return null;
 
+  }
+
+
+  void insertCamera(SurveillanceCamera camera) {
+
+    new insertAsync(cameraDao).execute(camera);
 
   }
 
@@ -97,12 +120,33 @@ public class SurveillanceCameraRepository {
   }
 
 
-  private static class insertListAsync extends AsyncTask<SurveillanceCamera, Void, Void> {
+  private static class findByIdAsync extends AsyncTask<Long, Void, SurveillanceCamera> {
 
     private SurveillanceCameraDao mAsyncTaskDao;
     String TAG = "SynchronizedCameraRepository InsertAsyncTask";
 
-    insertListAsync(SurveillanceCameraDao dao) {
+    findByIdAsync(SurveillanceCameraDao dao) {
+      mAsyncTaskDao = dao;
+    }
+
+    @Override
+    protected SurveillanceCamera doInBackground(Long... osmId) {
+
+
+      SurveillanceCamera camera = mAsyncTaskDao.findById(osmId[0]);
+
+      return camera;
+    }
+
+  }
+
+
+  private static class insertAsync extends AsyncTask<SurveillanceCamera, Void, Void> {
+
+    private SurveillanceCameraDao mAsyncTaskDao;
+    String TAG = "SynchronizedCameraRepository InsertAsyncTask";
+
+    insertAsync(SurveillanceCameraDao dao) {
       mAsyncTaskDao = dao;
     }
 

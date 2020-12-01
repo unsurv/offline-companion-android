@@ -73,7 +73,7 @@ public abstract class SurveillanceCameraDatabase extends RoomDatabase {
                 5,
                 15,
                 null,
-                12345678 + i,
+                113244567788L + i,
                 49.99646 + i / 1000f,
                 8.27983 + i / 1000f,
                 null,

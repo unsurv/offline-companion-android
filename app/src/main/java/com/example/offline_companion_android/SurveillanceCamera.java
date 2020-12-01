@@ -51,7 +51,7 @@ public class SurveillanceCamera {
                             int height,
                             int angle,
                             @Nullable String imagePath,
-                            @Nullable long externalId,
+                            long externalId,
                             double latitude,
                             double longitude,
                             @Nullable String comment,
@@ -105,12 +105,11 @@ public class SurveillanceCamera {
     return angle;
   }
 
-
+  @Nullable
   public String getImagePath() {
     return imagePath;
   }
 
-  @Nullable
   public long getExternalId() {
     return externalId;
   }
