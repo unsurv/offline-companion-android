@@ -46,4 +46,11 @@ dependencies {
     //Volley google request library
     implementation 'com.android.volley:volley:1.1.1'
 
+    // room database
+
+    def room_version = "2.2.5"
+
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+
 }

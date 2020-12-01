@@ -16,6 +16,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.google.gson.JsonObject;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -60,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
   private ItemizedOverlay<OverlayItem> cameraOverlay;
   private ItemizedOverlay<OverlayItem> deviceLocationOverlay;
 
+  private SurveillanceCameraRepository cameraRepository;
+
   // private List<OverlayItem> cameraItemsToDisplay = new ArrayList<>();
   // private List<OverlayItem> locationItemsToDisplay = new ArrayList<>();
 
@@ -71,6 +75,10 @@ public class MainActivity extends AppCompatActivity {
 
     ctx = this;
 
+    cameraRepository = new SurveillanceCameraRepository(getApplication());
+
+
+    List<SurveillanceCamera> allCameras = cameraRepository.getAllCameras();
 
     debugText = findViewById(R.id.debugTextView);
 
@@ -111,11 +119,9 @@ public class MainActivity extends AppCompatActivity {
 
     try {
 
-      testCameras = new JSONArray("[{\"id\":1475,\"location\":{\"lat\":49.9958,\"lon\":8.28196}},{\"id\":2298,\"location\":{\"lat\":49.99557,\"lon\":8.28153}}]\n");
+      testCameras = new JSONArray("[{\"id\":113244567788,\"location\":{\"lat\":49.9958,\"lon\":8.28196}},{\"id\":1132445677223,\"location\":{\"lat\":49.99557,\"lon\":8.28153}}]\n");
 
-      populateMapFromNfc(new JSONObject("{\"battery\":109,\"time\":\"2020-11-21 15:29:8\",\"location\":{\"lat\":49.99592,\"lon\":8.28185,\"alt\":123890,\"SIV\":4,\"time\":\"2020-11-21 15:29:9\"},\"contacts\":[{\"id\":1475,\"distance\":74.867378234863281},{\"id\":2298,\"distance\":99.140815734863281}]}\n"));
-
-
+      populateMapFromNfc(new JSONArray("[{\"loc\":{\"lat\":50.022714,\"lon\":8.2239192,\"SIV\":4,\"t\":\"20:23:40\"},\"ids\":[113244567788]},{\"loc\":{\"lat\":50.022724,\"lon\":8.2239392,\"SIV\":4,\"t\":\"20:23:40\"},\"ids\":[1132445677223]}]"));
 
 
     } catch (JSONException jsonException) {
@@ -208,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-  void populateMapFromNfc(JSONObject nfcJSON) {
+  void populateMapFromNfc(JSONArray nfcJSON) {
 
     ArrayList<OverlayItem> cameraItems = new ArrayList<OverlayItem>();
 
@@ -216,50 +222,57 @@ public class MainActivity extends AppCompatActivity {
 
     try {
 
-      JSONArray contacts = (JSONArray) nfcJSON.get("contacts");
 
-      for (int i = 0; i < contacts.length(); i++) {
+      for (int i = 0; i < nfcJSON.length(); i++) {
+
+        JSONObject contact = (JSONObject) nfcJSON.get(i);
+
+        JSONObject deviceLocation = (JSONObject) contact.getJSONObject("loc");
+
+        deviceLocationItems.add(
+                new OverlayItem(
+                        "your location at time of contact",
+                        "",
+                        "Accuracy (SIV): " + deviceLocation.getString("SIV"),
+                        new GeoPoint(deviceLocation.getDouble("lat"), deviceLocation.getDouble("lon"))
+                )
+        );
+
+
+        JSONArray ids = (JSONArray) contact.get("ids");
 
         // fill camera itemOverlay here
 
-        JSONObject contact = contacts.getJSONObject(i);
+        for (int k = 0; k < ids.length(); k++) {
 
-        long contactId = contact.getLong("id");
+          long contactId =  (long) ids.get(k);
 
-        // match id from nfc with data from local db
+          // match id from nfc with data from local db
+          for (int j = 0; j < testCameras.length(); j++) {
+            JSONObject camera = (JSONObject) testCameras.get(j);
+            JSONObject cameraLocation = (JSONObject) camera.getJSONObject("location");
 
-        for (int j = 0; j < testCameras.length(); j++) {
-          JSONObject camera = (JSONObject) testCameras.get(j);
-          JSONObject cameraLocation = (JSONObject) camera.getJSONObject("location");
+            if (contactId == camera.getLong("id") ) {
 
-          if (contactId == camera.getLong("id") ) {
-
-            cameraItems.add(
-                    new OverlayItem(
-                            contact.getString("id"),
-                            "surveillance camera",
-                            "You were in range of this camera on XX:XX XX.XX.XXXX",
-                            new GeoPoint(cameraLocation.getDouble("lat"),
-                                    cameraLocation.getDouble("lon"))
-                    )
-            );
+              cameraItems.add(
+                      new OverlayItem(
+                              String.valueOf(contactId),
+                              "surveillance camera",
+                              "You were in range of this camera on XX:XX XX.XX.XXXX",
+                              new GeoPoint(cameraLocation.getDouble("lat"),
+                                      cameraLocation.getDouble("lon"))
+                      )
+              );
 
 
+            }
           }
         }
 
+        
       }
 
-      JSONObject deviceLocation = nfcJSON.getJSONObject("location");
 
-      deviceLocationItems.add(
-              new OverlayItem(
-                      "your location at time of contact",
-                      "",
-                      "Accuracy (SIV): " + deviceLocation.getString("SIV"),
-                      new GeoPoint(deviceLocation.getDouble("lat"), deviceLocation.getDouble("lon"))
-              )
-      );
 
 
 
@@ -269,21 +282,21 @@ public class MainActivity extends AppCompatActivity {
 
     }
     Drawable cameraMarkerIcon = ContextCompat.getDrawable(ctx, R.drawable.simple_marker_5dpi);
+
+    // Drawable deviceLocationMarker = getResources().getDrawable(R.drawable.ic_baseline_location_on_24_green);
     Drawable deviceLocationMarker = ContextCompat.getDrawable(ctx, R.drawable.simple_green_5dpi);
 
     cameraOverlay = new ItemizedIconOverlay<>(cameraItems, cameraMarkerIcon, null, ctx);
 
     deviceLocationOverlay = new ItemizedIconOverlay<>(deviceLocationItems, deviceLocationMarker,  null, ctx);
 
-    mapView.getOverlays().remove(cameraOverlay);
     mapView.getOverlays().remove(deviceLocationOverlay);
+    mapView.getOverlays().remove(cameraOverlay);
 
-    mapView.getOverlays().add(cameraOverlay);
     mapView.getOverlays().add(deviceLocationOverlay);
+    mapView.getOverlays().add(cameraOverlay);
 
     mapView.invalidate();
-
-
 
 
   }
