@@ -316,7 +316,6 @@ public class MainActivity extends AppCompatActivity {
 
   void drawConnectionLines() {
 
-    GeoPoint origin
 
   }
 
