@@ -1,5 +1,7 @@
 package com.example.offline_companion_android;
 
+import androidx.annotation.Nullable;
+
 import org.osmdroid.util.GeoPoint;
 
 import java.util.List;
@@ -11,10 +13,21 @@ public class SurveillanceContact {
   private List<SurveillanceCamera> camerasInRange;
 
   public SurveillanceContact(GeoPoint deviceLocation,
-                             List<SurveillanceCamera> cameras){
+                             @Nullable  List<SurveillanceCamera> cameras){
     this.deviceLocation = deviceLocation;
     this.camerasInRange = cameras;
   }
+
+
+  public List<SurveillanceCamera> getAllCameras() {
+    return camerasInRange;
+  }
+
+  public void addCamera(SurveillanceCamera camera) {
+    this.camerasInRange.add(camera);
+  }
+
+
 
   public GeoPoint getDeviceLocation() {
     return deviceLocation;

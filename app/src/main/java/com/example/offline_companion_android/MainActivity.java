@@ -69,6 +69,8 @@ public class MainActivity extends AppCompatActivity {
   private SurveillanceCameraRepository cameraRepository;
 
   private List<SurveillanceCamera> camerasOnMap;
+  private List<SurveillanceContact> surveillanceContacts;
+
   private List<Polygon> polygonsOnMap;
   private List<Polyline> polylinesOnMap;
 
@@ -99,6 +101,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     camerasOnMap = new ArrayList<>();
+    surveillanceContacts = new ArrayList<>();
+    polylinesOnMap = new ArrayList<>();
+    polygonsOnMap = new ArrayList<>();
 
     mapView = findViewById(R.id.map);
     CopyrightOverlay copyrightOverlay = new CopyrightOverlay(ctx);
@@ -237,6 +242,11 @@ public class MainActivity extends AppCompatActivity {
 
         JSONObject deviceLocation = (JSONObject) contact.getJSONObject("loc");
 
+        SurveillanceContact surveillanceContact = new SurveillanceContact(
+                new GeoPoint(deviceLocation.getDouble("lat"),
+                        deviceLocation.getDouble("lon"))
+                , new ArrayList<SurveillanceCamera>());
+
         deviceLocationItems.add(
                 new OverlayItem(
                         "your location at time of contact",
@@ -259,6 +269,8 @@ public class MainActivity extends AppCompatActivity {
 
           SurveillanceCamera camera = cameraRepository.findById(contactId);
 
+          surveillanceContact.addCamera(camera);
+
           camerasOnMap.add(camera);
 
           if (camera != null) {
@@ -274,6 +286,9 @@ public class MainActivity extends AppCompatActivity {
           }
 
         }
+
+
+        surveillanceContacts.add(surveillanceContact);
       }
 
 
@@ -302,6 +317,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    drawConnectionLines(surveillanceContacts);
+
 
     mapView.getOverlays().remove(deviceLocationOverlay);
     mapView.getOverlays().remove(cameraOverlay);
@@ -314,9 +331,19 @@ public class MainActivity extends AppCompatActivity {
 
   }
 
-  void drawConnectionLines() {
+  void drawConnectionLines(List<SurveillanceContact> contacts) {
 
 
+    for (SurveillanceContact contact: contacts) {
+      Polyline line = new Polyline();
+
+      for (SurveillanceCamera camera: contact.getAllCameras()) {
+        line.setPoints(Arrays.asList(contact.getDeviceLocation(), new GeoPoint(camera.getLatitude(), camera.getLongitude())));
+      }
+      polylinesOnMap.add(line);
+    }
+
+    mapView.getOverlayManager().addAll(polylinesOnMap);
   }
 
   void drawCameraArea(GeoPoint currentPos, int direction, int height, int horizontalAngle, int cameraType) {
