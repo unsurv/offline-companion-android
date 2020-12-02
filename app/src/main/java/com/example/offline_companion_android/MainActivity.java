@@ -16,6 +16,7 @@ import android.nfc.tech.Ndef;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -76,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
   private List<Polyline> polylinesOnMap;
 
   private ImageButton infoButton;
+  private boolean infoIsShowing;
 
   // private List<OverlayItem> cameraItemsToDisplay = new ArrayList<>();
   // private List<OverlayItem> locationItemsToDisplay = new ArrayList<>();
@@ -132,8 +134,42 @@ public class MainActivity extends AppCompatActivity {
     mapController.setZoom(11.8);
     mapController.setCenter(startPoint);
 
+    infoIsShowing = false;
+
     // info button
     infoButton = findViewById(R.id.map_info_button);
+
+    infoButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+
+        if (!infoIsShowing) {
+          for (SurveillanceCamera cam: camerasOnMap) {
+
+            drawCameraArea(new GeoPoint(cam.getLatitude(), cam.getLongitude()),
+                    cam.getDirection(),
+                    cam.getHeight(),
+                    cam.getAngle(),
+                    cam.getCameraType());
+
+          }
+
+          drawConnectionLines(surveillanceContacts);
+          infoIsShowing = true;
+
+          mapView.invalidate();
+        }
+        else {
+          mapView.getOverlayManager().removeAll(polygonsOnMap);
+          mapView.getOverlayManager().removeAll(polylinesOnMap);
+          infoIsShowing = false;
+          mapView.invalidate();
+        }
+
+
+
+      }
+    });
 
     try {
 
@@ -313,19 +349,6 @@ public class MainActivity extends AppCompatActivity {
 
     deviceLocationOverlay = new ItemizedIconOverlay<>(deviceLocationItems, deviceLocationMarker,  null, ctx);
 
-    for (SurveillanceCamera cam: camerasOnMap) {
-
-      drawCameraArea(new GeoPoint(cam.getLatitude(), cam.getLongitude()),
-              cam.getDirection(),
-              cam.getHeight(),
-              cam.getAngle(),
-              cam.getCameraType());
-
-    }
-
-    drawConnectionLines(surveillanceContacts);
-
-
     mapView.getOverlays().remove(deviceLocationOverlay);
     mapView.getOverlays().remove(cameraOverlay);
 
@@ -387,9 +410,6 @@ public class MainActivity extends AppCompatActivity {
       double angleFactor = Math.pow(25f / horizontalAngle, 2) * 0.4;
       baseViewDistance *= angleFactor;
     }
-
-    // remove old drawings
-    mapView.getOverlayManager().remove(polygon);
 
     List<GeoPoint> geoPoints;
 
@@ -471,6 +491,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     polygon.setPoints(geoPoints);
+
+    polygonsOnMap.add(polygon);
+
     mapView.getOverlayManager().add(polygon);
     mapView.invalidate();
 
