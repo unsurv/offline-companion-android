@@ -1,8 +1,10 @@
-package com.example.offline_companion_android;
+package org.unsurv.offline_companion_android;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+
+import org.unsurv.offline_companion_android.R;
 
 public class MapActivity extends AppCompatActivity {
 

@@ -1,4 +1,4 @@
-package com.example.offline_companion_android;
+package org.unsurv.offline_companion_android;
 
 import androidx.room.Dao;
 import androidx.room.Insert;

@@ -1,11 +1,8 @@
-package com.example.offline_companion_android;
+package org.unsurv.offline_companion_android;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import androidx.annotation.Nullable;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**

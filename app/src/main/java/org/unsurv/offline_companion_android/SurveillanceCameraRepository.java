@@ -1,10 +1,8 @@
-package com.example.offline_companion_android;
+package org.unsurv.offline_companion_android;
 
 import android.app.Application;
 import android.os.AsyncTask;
 import android.util.Log;
-
-import org.apache.commons.lang3.concurrent.ConcurrentException;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;

@@ -1,4 +1,4 @@
-package com.example.offline_companion_android;
+package org.unsurv.offline_companion_android;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -20,7 +20,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.google.gson.JsonObject;
+import org.unsurv.offline_companion_android.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,7 +34,6 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.CopyrightOverlay;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.ItemizedOverlay;
-import org.osmdroid.views.overlay.ItemizedOverlayWithFocus;
 import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.Polygon;
 import org.osmdroid.views.overlay.Polyline;
