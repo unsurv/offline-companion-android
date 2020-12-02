@@ -16,6 +16,7 @@ import android.nfc.tech.Ndef;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.gson.JsonObject;
@@ -74,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
   private List<Polygon> polygonsOnMap;
   private List<Polyline> polylinesOnMap;
 
+  private ImageButton infoButton;
+
   // private List<OverlayItem> cameraItemsToDisplay = new ArrayList<>();
   // private List<OverlayItem> locationItemsToDisplay = new ArrayList<>();
 
@@ -129,11 +132,14 @@ public class MainActivity extends AppCompatActivity {
     mapController.setZoom(11.8);
     mapController.setCenter(startPoint);
 
+    // info button
+    infoButton = findViewById(R.id.map_info_button);
+
     try {
 
       // testCameras = new JSONArray("[{\"id\":113244567788,\"location\":{\"lat\":49.9958,\"lon\":8.28196}},{\"id\":113244567789,\"location\":{\"lat\":49.99557,\"lon\":8.28153}}]\n");
 
-      populateMapFromNfc(new JSONArray("[{\"loc\":{\"lat\":49.99631,\"lon\":8.28206,\"SIV\":4,\"t\":\"20:23:40\"},\"ids\":[113244567788]},{\"loc\":{\"lat\":49.99584,\"lon\":8.28214,\"SIV\":4,\"t\":\"20:23:40\"},\"ids\":[113244567789]}]"));
+      populateMapFromNfc(new JSONArray("[{\"loc\":{\"lat\":49.99631,\"lon\":8.28206,\"SIV\":4,\"t\":\"20:23:40\"},\"ids\":[113244567788]},{\"loc\":{\"lat\":49.99584,\"lon\":8.28214,\"SIV\":4,\"t\":\"20:23:40\"},\"ids\":[113244567789]},{\"loc\":{\"lat\":49.99611,\"lon\":8.28208,\"SIV\":4,\"t\":\"20:23:40\"},\"ids\":[223244567788]},{\"loc\":{\"lat\":49.99581,\"lon\":8.28222,\"SIV\":4,\"t\":\"20:23:40\"},\"ids\":[223244567789]}]"));
 
     } catch (JSONException jsonException) {
 
@@ -337,6 +343,9 @@ public class MainActivity extends AppCompatActivity {
     for (SurveillanceContact contact: contacts) {
       Polyline line = new Polyline();
 
+      int hotPink = Color.argb(127, 255, 0, 255);
+      line.setColor(hotPink);
+
       for (SurveillanceCamera camera: contact.getAllCameras()) {
         line.setPoints(Arrays.asList(contact.getDeviceLocation(), new GeoPoint(camera.getLatitude(), camera.getLongitude())));
       }
@@ -347,6 +356,10 @@ public class MainActivity extends AppCompatActivity {
   }
 
   void drawCameraArea(GeoPoint currentPos, int direction, int height, int horizontalAngle, int cameraType) {
+
+    if (cameraType == StorageUtils.UNKNOWN) {
+      return;
+    }
 
     Polygon polygon = new Polygon();
 
@@ -411,7 +424,6 @@ public class MainActivity extends AppCompatActivity {
         Location endpoint2 = LocationUtils.getNewLocation(startLat, startLon, yDiff2, xDiff2);
 
 
-
         geoPoints.add(new GeoPoint(startLat, startLon));
         geoPoints.add(new GeoPoint(endpoint1.getLatitude(), endpoint1.getLongitude()));
         geoPoints.add(new GeoPoint(endpoint2.getLatitude(), endpoint2.getLongitude()));
@@ -450,10 +462,6 @@ public class MainActivity extends AppCompatActivity {
 
 
       }
-
-
-
-
 
     } else {
 

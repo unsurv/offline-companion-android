@@ -63,10 +63,10 @@ public abstract class SurveillanceCameraDatabase extends RoomDatabase {
 
       // use sync here
 
-      for (int i = 0; i < 30; i++) {
+      for (int i = 0; i < 10; i++) {
 
         SurveillanceCamera testCam = new SurveillanceCamera(
-                StorageUtils.UNKNOWN,
+                StorageUtils.FIXED_CAMERA,
                 StorageUtils.AREA_UNKNOWN,
                 150,
                 StorageUtils.MOUNT_UNKNOWN,
@@ -79,9 +79,24 @@ public abstract class SurveillanceCameraDatabase extends RoomDatabase {
                 null,
                 null);
 
+        SurveillanceCamera testCam2 = new SurveillanceCamera(
+                StorageUtils.DOME_CAMERA,
+                StorageUtils.AREA_UNKNOWN,
+                150,
+                StorageUtils.MOUNT_UNKNOWN,
+                5,
+                15,
+                null,
+                223244567788L + i,
+                49.99542 + i / 1000f,
+                8.27885 + i / 1000f,
+                null,
+                null);
+
 
 
         mDao.insert(testCam);
+        mDao.insert(testCam2);
       }
 
 
