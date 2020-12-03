@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import org.osmdroid.util.BoundingBox;
 import org.unsurv.offline_companion_android.R;
 
 import org.json.JSONArray;
@@ -44,7 +45,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED;
-
 
 /**
  * modified from Ralf Wondratschek  NFC tutorial
@@ -77,6 +77,12 @@ public class MainActivity extends AppCompatActivity {
 
   private ImageButton infoButton;
   private boolean infoIsShowing;
+
+  // stupid values so they get changed in first loop, this is stupid
+  double latMin = 1000;
+  double latMax = -1000;
+  double lonMin = 1000;
+  double lonMax = -1000;
 
   // private List<OverlayItem> cameraItemsToDisplay = new ArrayList<>();
   // private List<OverlayItem> locationItemsToDisplay = new ArrayList<>();
@@ -283,9 +289,32 @@ public class MainActivity extends AppCompatActivity {
 
         JSONObject deviceLocation = (JSONObject) contact.getJSONObject("loc");
 
+        double deviceLat = deviceLocation.getDouble("lat");
+        double deviceLon = deviceLocation.getDouble("lon");
+
+
+        if (deviceLat < latMin) {
+          latMin = deviceLat;
+        }
+
+        if (deviceLat > latMax) {
+          latMax = deviceLat;
+        }
+
+
+        if (deviceLon < lonMin) {
+          lonMin = deviceLon;
+        }
+
+        if (deviceLon > lonMax) {
+          lonMax = deviceLon;
+        }
+
+
+
+
         SurveillanceContact surveillanceContact = new SurveillanceContact(
-                new GeoPoint(deviceLocation.getDouble("lat"),
-                        deviceLocation.getDouble("lon"))
+                new GeoPoint(deviceLat, deviceLon)
                 , new ArrayList<SurveillanceCamera>());
 
         deviceLocationItems.add(
@@ -293,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
                         "your location at time of contact",
                         "",
                         "Accuracy (SIV): " + deviceLocation.getString("SIV"),
-                        new GeoPoint(deviceLocation.getDouble("lat"), deviceLocation.getDouble("lon"))
+                        new GeoPoint(deviceLat, deviceLon)
                 )
         );
 
@@ -323,6 +352,29 @@ public class MainActivity extends AppCompatActivity {
                             new GeoPoint(camera.getLatitude(), camera.getLongitude())
                     )
             );
+
+
+            double cameraLat = camera.getLatitude();
+            double cameraLon = camera.getLongitude();
+
+            if (cameraLat < latMin) {
+              latMin = cameraLat;
+            }
+
+            if (cameraLat > latMax) {
+              latMax = cameraLat;
+            }
+
+
+            if (cameraLon < lonMin) {
+              lonMin = cameraLon;
+            }
+
+            if (cameraLon > lonMax) {
+              lonMax = cameraLon;
+            }
+
+
 
           }
 
@@ -354,9 +406,27 @@ public class MainActivity extends AppCompatActivity {
     mapView.getOverlays().add(deviceLocationOverlay);
     mapView.getOverlays().add(cameraOverlay);
 
+
+    // add 10 % between latmin and latmax to better show all markers in Boundingbox
+    double latInterval = Math.abs(latMax - latMin);
+    // 5 % each
+    latMin -= latInterval / 20;
+    latMax += latInterval / 20;
+
+    double lonInterval = Math.abs(lonMax - lonMin);
+
+    lonMin -= lonInterval / 20;
+    lonMax += lonInterval / 20;
+
+    mapView.post(
+            new Runnable() {
+              @Override
+              public void run() {
+                mapView.zoomToBoundingBox(new BoundingBox(latMax, lonMax, latMin, lonMin), true);
+              }
+            }
+    );
     mapView.invalidate();
-
-
   }
 
   void drawConnectionLines(List<SurveillanceContact> contacts) {
