@@ -80,6 +80,14 @@ public class SurveillanceCameraRepository {
 
   }
 
+  void insertAll(List<SurveillanceCamera> synchronizedCameras) {
+
+    for (SurveillanceCamera camera : synchronizedCameras) {
+      new insertAsync(cameraDao).execute(camera);
+    }
+
+  }
+
 
 
 

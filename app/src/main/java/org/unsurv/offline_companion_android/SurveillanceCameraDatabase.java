@@ -95,8 +95,8 @@ public abstract class SurveillanceCameraDatabase extends RoomDatabase {
 
 
 
-        mDao.insert(testCam);
-        mDao.insert(testCam2);
+        // mDao.insert(testCam);
+        // mDao.insert(testCam2);
       }
 
 
