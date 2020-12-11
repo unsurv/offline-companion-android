@@ -160,13 +160,15 @@ public class ConnectionUtils {
 
                   }
 
-                  if (insertIntoDb) {
-                    crep.insertAll(camerasToSync);
-                  }
+
 
                 } catch (Exception e) {
                   Log.i(TAG, "onResponse: " + e.toString());
 
+                }
+
+                if (insertIntoDb) {
+                  crep.insertAll(camerasToSync);
                 }
 
               }

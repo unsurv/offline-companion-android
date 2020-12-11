@@ -57,7 +57,7 @@ public abstract class SurveillanceCameraDatabase extends RoomDatabase {
 
     @Override
     protected Void doInBackground(final Void... params) {
-      mDao.deleteAll();
+      // mDao.deleteAll();
 
 
 

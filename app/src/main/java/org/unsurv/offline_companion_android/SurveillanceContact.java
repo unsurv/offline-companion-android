@@ -12,10 +12,13 @@ public class SurveillanceContact {
 
   private List<SurveillanceCamera> camerasInRange;
 
+  private boolean isShown;
+
   public SurveillanceContact(GeoPoint deviceLocation,
                              @Nullable  List<SurveillanceCamera> cameras){
     this.deviceLocation = deviceLocation;
     this.camerasInRange = cameras;
+    this.isShown = false;
   }
 
 
@@ -37,11 +40,19 @@ public class SurveillanceContact {
     return camerasInRange;
   }
 
+  public boolean isShown() {
+    return isShown;
+  }
+
   public void setDeviceLocation(GeoPoint deviceLocation) {
     this.deviceLocation = deviceLocation;
   }
 
   public void setCamerasInRange(List<SurveillanceCamera> camerasInRange) {
     this.camerasInRange = camerasInRange;
+  }
+
+  public void setShown(boolean shown) {
+    isShown = shown;
   }
 }

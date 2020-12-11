@@ -17,6 +17,12 @@ public class SurveillanceCameraRepository {
 
   }
 
+  void deleteAll() {
+
+      new deleteAllAsync(cameraDao).execute();
+
+  }
+
   List<SurveillanceCamera> getSynchronizedCamerasInArea(double latMin, double latMax, double lonMin, double lonMax) {
 
     try {
@@ -166,8 +172,26 @@ public class SurveillanceCameraRepository {
           mAsyncTaskDao.insert(cam[0]);
         }
 
+      return null;
+    }
 
-      
+  }
+
+  private static class deleteAllAsync extends AsyncTask<Void, Void, Void> {
+
+    private SurveillanceCameraDao mAsyncTaskDao;
+    String TAG = "SynchronizedCameraRepository InsertAsyncTask";
+
+    deleteAllAsync(SurveillanceCameraDao dao) {
+      mAsyncTaskDao = dao;
+    }
+
+    @Override
+    protected Void doInBackground(Void... cam) {
+
+      mAsyncTaskDao.deleteAll();
+
+
       return null;
     }
 

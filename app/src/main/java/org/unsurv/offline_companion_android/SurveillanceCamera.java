@@ -4,6 +4,8 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import androidx.annotation.Nullable;
 
+import org.osmdroid.util.GeoPoint;
+
 
 /**
  * Object representing a local camera capture by the user. Either manual, via object detection or
@@ -40,6 +42,7 @@ public class SurveillanceCamera {
 
   private String timestamp; // can be disabled in settings
 
+  private boolean isShown;
 
   public SurveillanceCamera(int cameraType,
                             int area,
@@ -71,6 +74,8 @@ public class SurveillanceCamera {
     this.comment = comment;
 
     this.timestamp = timestamp;
+
+    this.isShown = false;
 
   }
 
@@ -126,7 +131,13 @@ public class SurveillanceCamera {
 
   public String getTimestamp() { return timestamp; }
 
+  public boolean isShown() {
+    return isShown;
+  }
 
+  public GeoPoint getPositionAsGeoPoint() {
+    return  new GeoPoint(latitude, longitude);
+  }
 
 
   public void setId(int id) {
@@ -179,7 +190,10 @@ public class SurveillanceCamera {
 
   public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
 
+  public void setShown(boolean shown) {
+    isShown = shown;
+  }
 
-//TODO add delete function to delete all Files connected to specific camera
+  //TODO add delete function to delete all Files connected to specific camera
 
 }

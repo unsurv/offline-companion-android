@@ -100,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
 
     cameraRepository = new SurveillanceCameraRepository(getApplication());
 
+    cameraRepository.deleteAll();
+
     debugText = findViewById(R.id.debugTextView);
 
     nfcAdapter = NfcAdapter.getDefaultAdapter(ctx);
@@ -304,6 +306,8 @@ public class MainActivity extends AppCompatActivity {
 
     ArrayList<OverlayItem> deviceLocationItems = new ArrayList<OverlayItem>();
 
+    List<SurveillanceCamera> allCameras = cameraRepository.getAllCameras();
+
     try {
 
 
@@ -354,8 +358,6 @@ public class MainActivity extends AppCompatActivity {
         JSONArray ids = (JSONArray) contact.get("ids");
 
         // fill camera itemOverlay here
-
-        List<SurveillanceCamera> allCameras = cameraRepository.getAllCameras();
 
         for (int k = 0; k < ids.length(); k++) {
 
@@ -429,7 +431,28 @@ public class MainActivity extends AppCompatActivity {
     // Drawable deviceLocationMarker = getResources().getDrawable(R.drawable.ic_baseline_location_on_24_green);
     Drawable deviceLocationMarker = ContextCompat.getDrawable(ctx, R.drawable.simple_green_5dpi);
 
-    cameraOverlay = new ItemizedIconOverlay<>(cameraItems, cameraMarkerIcon, null, ctx);
+    cameraOverlay = new ItemizedIconOverlay<>(cameraItems, cameraMarkerIcon, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+      @Override
+      public boolean onItemSingleTapUp(int index, OverlayItem item) {
+
+
+
+        SurveillanceCamera chosenCamera = camerasOnMap.get(index);
+        drawCameraArea(chosenCamera.getPositionAsGeoPoint(),
+                chosenCamera.getDirection(),
+                chosenCamera.getHeight(),
+                chosenCamera.getAngle(),
+                chosenCamera.getCameraType());
+
+        return true;
+      }
+
+      @Override
+      public boolean onItemLongPress(int index, OverlayItem item) {
+        return false;
+      }
+
+    }, ctx);
 
     deviceLocationOverlay = new ItemizedIconOverlay<>(deviceLocationItems, deviceLocationMarker,  null, ctx);
 
