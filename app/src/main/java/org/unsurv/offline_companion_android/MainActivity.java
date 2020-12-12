@@ -22,7 +22,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.osmdroid.util.BoundingBox;
-import org.unsurv.offline_companion_android.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -78,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
   private List<Polygon> polygonsOnMap;
   private List<Polyline> polylinesOnMap;
 
-  private ImageButton infoButton;
+  private ImageButton resetButton;
   private ImageButton downloadButton;
   private boolean infoIsShowing;
 
@@ -148,11 +147,13 @@ public class MainActivity extends AppCompatActivity {
     infoIsShowing = false;
 
     // info button
-    infoButton = findViewById(R.id.map_info_button);
+    resetButton = findViewById(R.id.map_reset_button);
 
-    infoButton.setOnClickListener(new View.OnClickListener() {
+    resetButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
+
+        clearMapDrawings();
 
         populateMapFromNfc(testCameras);
 

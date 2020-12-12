@@ -15,14 +15,14 @@
 
     <ImageButton
         android:contentDescription="info button"
-        android:id="@+id/map_info_button"
+        android:id="@+id/map_reset_button"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="10dp"
         android:layout_marginBottom="20dp"
-        android:src="@drawable/ic_baseline_info_24_teal" />
+        android:src="@drawable/ic_baseline_undo_24_teal" />
 
     <ImageButton
         android:id="@+id/map_download_button"
