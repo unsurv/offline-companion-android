@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.osmdroid.util.BoundingBox;
 import org.unsurv.offline_companion_android.R;
@@ -155,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
 
         populateMapFromNfc(testCameras);
 
-        if (!infoIsShowing && camerasOnMap.size() > 0) {
+        /*if (!infoIsShowing && camerasOnMap.size() > 0) {
           for (SurveillanceCamera cam: camerasOnMap) {
 
             drawCameraArea(new GeoPoint(cam.getLatitude(), cam.getLongitude()),
@@ -176,7 +177,8 @@ public class MainActivity extends AppCompatActivity {
           mapView.getOverlayManager().removeAll(polylinesOnMap);
           polylinesOnMap.clear();
           infoIsShowing = false;
-        }
+        } */
+
 
         mapView.invalidate();
 
@@ -435,14 +437,21 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public boolean onItemSingleTapUp(int index, OverlayItem item) {
 
-
-
         SurveillanceCamera chosenCamera = camerasOnMap.get(index);
-        drawCameraArea(chosenCamera.getPositionAsGeoPoint(),
-                chosenCamera.getDirection(),
-                chosenCamera.getHeight(),
-                chosenCamera.getAngle(),
-                chosenCamera.getCameraType());
+
+        // don't show twice
+        if (!chosenCamera.isShown()) {
+
+          drawCameraArea(chosenCamera.getPositionAsGeoPoint(),
+                  chosenCamera.getDirection(),
+                  chosenCamera.getHeight(),
+                  chosenCamera.getAngle(),
+                  chosenCamera.getCameraType());
+
+          chosenCamera.setShown(true);
+
+        }
+
 
         return true;
       }
@@ -454,7 +463,28 @@ public class MainActivity extends AppCompatActivity {
 
     }, ctx);
 
-    deviceLocationOverlay = new ItemizedIconOverlay<>(deviceLocationItems, deviceLocationMarker,  null, ctx);
+    deviceLocationOverlay = new ItemizedIconOverlay<>(deviceLocationItems, deviceLocationMarker, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+      @Override
+      public boolean onItemSingleTapUp(int index, OverlayItem item) {
+
+        SurveillanceContact chosenConact = surveillanceContacts.get(index);
+
+        if (!chosenConact.isShown()) {
+
+          drawConnectionLines(Arrays.asList(chosenConact));
+
+          chosenConact.setShown(true);
+
+        }
+
+        return true;
+      }
+
+      @Override
+      public boolean onItemLongPress(int index, OverlayItem item) {
+        return false;
+      }
+    }, ctx);
 
     mapView.getOverlays().remove(deviceLocationOverlay);
     mapView.getOverlays().remove(cameraOverlay);
@@ -489,28 +519,37 @@ public class MainActivity extends AppCompatActivity {
 
 
     for (SurveillanceContact contact: contacts) {
-      Polyline line = new Polyline();
+
 
       int hotPink = Color.argb(127, 255, 0, 255);
-      line.setColor(hotPink);
+
 
       for (SurveillanceCamera camera: contact.getAllCameras()) {
+
+        Polyline line = new Polyline();
+        line.setColor(hotPink);
         line.setPoints(Arrays.asList(contact.getDeviceLocation(), new GeoPoint(camera.getLatitude(), camera.getLongitude())));
+
+        if (!polylinesOnMap.contains(line)) {
+
+          polylinesOnMap.add(line);
+        }
+
       }
 
-      if (!polylinesOnMap.contains(line)) {
 
-        polylinesOnMap.add(line);
-      }
     }
 
     mapView.getOverlayManager().addAll(polylinesOnMap);
+    mapView.invalidate();
   }
 
-  void drawCameraArea(GeoPoint currentPos, int direction, int height, int horizontalAngle, int cameraType) {
+  Polygon drawCameraArea(GeoPoint currentPos, int direction, int height, int horizontalAngle, int cameraType) {
 
     if (cameraType == StorageUtils.UNKNOWN) {
-      return;
+      // empty polygon for unknown type
+      Toast.makeText(ctx, "Not enough data to estimate camera viewing area.", Toast.LENGTH_SHORT).show();
+      return new Polygon();
     }
 
     Polygon polygon = new Polygon();
@@ -626,6 +665,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     mapView.getOverlayManager().add(polygon);
+    mapView.invalidate();
+
+    return polygon;
+
+  }
+
+  void clearMapDrawings() {
+    mapView.getOverlayManager().removeAll(polygonsOnMap);
+    mapView.getOverlayManager().removeAll(polylinesOnMap);
     mapView.invalidate();
 
   }
