@@ -11,12 +11,12 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:icon="@drawable/unsurv_logo"
+        android:label="offline-companion"
+        android:roundIcon="@drawable/unsurv_logo"
         android:supportsRtl="true"
         android:theme="@style/Theme.Offlinecompanionandroid">
-        <activity android:name="org.unsurv.offline_companion_android.MapActivity"></activity>
+        <activity android:name="org.unsurv.offline_companion_android.MapActivity"/>
         <activity android:name="org.unsurv.offline_companion_android.StatisticsActivity" />
         <activity android:name="org.unsurv.offline_companion_android.MainActivity">
             <intent-filter>

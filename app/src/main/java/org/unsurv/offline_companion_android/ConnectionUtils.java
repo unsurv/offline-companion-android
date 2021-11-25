@@ -132,7 +132,6 @@ public class ConnectionUtils {
 
                       } catch (Exception ex) {
                         Log.i(TAG, "Error creating value from overpass api response: " + ex.toString());
-                        continue;
                       }
 
 
